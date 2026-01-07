@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Play, Clock, HelpCircle, ArrowRight, BookOpen, Calculator, BarChart3, Layout, Settings, LogOut, Search, Bell } from 'lucide-react';
-import { UserProgress } from '../types';
-import { Link } from 'react-router-dom';
+import { UserProgress, QuizResult } from '../types';
+import { Link, useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [lastResult, setLastResult] = useState<QuizResult | null>(null);
+
+  // Load history on mount
+  useEffect(() => {
+    const history = JSON.parse(localStorage.getItem('quizHistory') || '[]');
+    if (history.length > 0) {
+      setLastResult(history[0]);
+    }
+  }, []);
+
   const courses: UserProgress[] = [
     {
       courseId: 'm1',
@@ -31,6 +42,10 @@ const DashboardPage: React.FC = () => {
       imageUrl: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?q=80&w=2069&auto=format&fit=crop',
     }
   ];
+
+  const handleStartQuiz = (courseId: string) => {
+    navigate(`/ensayo/${courseId}`);
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f4f7f9]">
@@ -108,15 +123,19 @@ const DashboardPage: React.FC = () => {
 
         <main className="p-4 md:p-8">
           <div className="mx-auto max-w-6xl">
-            {/* Welcome Banner */}
+            {/* Welcome Banner / Last Score */}
             <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-blue-600 p-8 text-white shadow-lg">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h1 className="text-2xl font-bold md:text-3xl">¡Vamos a practicar!</h1>
-                  <p className="mt-2 text-blue-100">Tienes 3 ensayos nuevos disponibles esta semana.</p>
+                  {lastResult ? (
+                    <p className="mt-2 text-blue-100">Tu último puntaje fue <span className="font-bold text-white">{lastResult.score}</span> puntos en M1.</p>
+                  ) : (
+                    <p className="mt-2 text-blue-100">Aún no has rendido ensayos. ¡Comienza hoy!</p>
+                  )}
                 </div>
                 <button className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-primary shadow-sm transition-transform hover:scale-105 active:scale-95">
-                  Ver estadísticas
+                  Ver historial completo
                 </button>
               </div>
             </div>
@@ -178,7 +197,9 @@ const DashboardPage: React.FC = () => {
                     )}
 
                     <div className="mt-auto">
-                      <button className={`flex w-full items-center justify-center rounded-lg py-2.5 text-sm font-bold transition-colors ${
+                      <button 
+                        onClick={() => handleStartQuiz(course.courseId)}
+                        className={`flex w-full items-center justify-center rounded-lg py-2.5 text-sm font-bold transition-colors ${
                         course.status === 'in-progress' 
                           ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                           : 'bg-primary text-white hover:bg-primary-dark'
